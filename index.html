@@ -4,41 +4,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Voice Email App</title>
+  <link rel="stylesheet" href="style.css" />
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      text-align: center;
-      padding: 2rem;
-      background-color: #f2f2f2;
-    }
-
-    .g_id_signin {
-      margin-top: 1.5rem;
-    }
-
-    #user-info {
-      margin-top: 2rem;
-      background-color: white;
-      padding: 1rem;
-      border-radius: 10px;
-      display: inline-block;
-    }
-  </style>
+  <script src="https://cdn.jsdelivr.net/npm/jwt-decode@4.0.0/build/cjs/index.js"></script>
 </head>
 <body>
-  <h1>Welcome to Voice Email App</h1>
-  <p>This is a secure email tool powered by voice and AI.</p>
+  <h1>Voice Email App</h1>
 
-  <!-- Google Sign-In -->
+  <!-- ✅ Google Sign-In -->
   <div id="g_id_onload"
-       data-client_id="341984270208-kiqufoaa8m1pa2lv4n5kvea411jtfv8t.apps.googleusercontent.com"
-       data-context="signin"
-       data-ux_mode="popup"
+       data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE"
        data-callback="handleCredentialResponse"
        data-auto_prompt="false">
   </div>
-
   <div class="g_id_signin"
        data-type="standard"
        data-size="large"
@@ -48,25 +26,22 @@
        data-logo_alignment="left">
   </div>
 
-  <!-- Signed-in User Info -->
-  <div id="user-info"></div>
+  <!-- ✅ App Interface -->
+  <textarea id="userText" placeholder="Speak or type your message..."></textarea><br>
+  <button id="mic-button">🎙️ Record</button>
+  <button id="format-button">🧠 Format</button>
+  <button id="send-button">📤 Send</button>
 
+  <p id="status">Not signed in</p>
+  <pre id="responseText"></pre>
+
+  <script src="app.js"></script>
   <script>
     function handleCredentialResponse(response) {
-      const data = parseJwt(response.credential);
-      document.getElementById("user-info").innerHTML =
-        `<p><strong>Signed in as:</strong> ${data.name} (${data.email})</p>`;
-      console.log("Google ID Token:", response.credential);
-      // You can now send this token to your server to validate and access Gmail API
-    }
-
-    function parseJwt(token) {
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-      }).join(''));
-      return JSON.parse(jsonPayload);
+      const data = jwt_decode(response.credential);
+      document.getElementById("status").innerText =
+        `✅ Signed in as ${data.name} (${data.email})`;
+      console.log("User signed in:", data);
     }
   </script>
 </body>
