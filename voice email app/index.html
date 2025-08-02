@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Voice Email App</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <script>
+    let accessToken = null;
+
+    function initOAuth() {
+      google.accounts.oauth2.initTokenClient({
+        client_id: '341984270208-kiqufoaa8m1pa2lv4n5kvea411jtfv8t.apps.googleusercontent.com',
+        scope: 'https://www.googleapis.com/auth/gmail.send',
+        callback: (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            accessToken = tokenResponse.access_token;
+            document.getElementById('status').innerText = '✅ Logged in. Ready to send email.';
+            document.getElementById('send-email-button').disabled = false;
+          } else {
+            document.getElementById('status').innerText = '❌ Login failed.';
+          }
+        },
+      }).requestAccessToken();
+    }
+
+    async function sendEmail() {
+      const rawEmail = document.getElementById("responseText").innerText;
+
+      if (!rawEmail || !accessToken) {
+        alert("Please login and generate the email first.");
+        return;
+      }
+
+      const base64EncodedEmail = btoa(rawEmail)
+        .replace(/\+/g, '-')
+        .replace(/\//g, '_')
+        .replace(/=+$/, '');
+
+      const res = await fetch("https://gmail.googleapis.com/gmail/v1/users/me/messages/send", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          raw: base64EncodedEmail,
+        }),
+      });
+
+      if (res.ok) {
+        document.getElementById('status').innerText = "📧 Email sent successfully!";
+      } else {
+        document.getElementById('status').innerText = "❌ Failed to send email.";
+        console.log(await res.text());
+      }
+    }
+  </script>
+</head>
+<body>
+  <h2>📨 Voice Email App</h2>
+
+  <textarea id="userText" placeholder="Speak or type your message..."></textarea><br>
+  <button id="mic-button">🎙️ Record</button>
+  <button id="format-button">🧠 Format</button>
+  <button id="google-login-button" onclick="initOAuth()">🔐 Login with Google</button>
+  <button id="send-email-button" onclick="sendEmail()" disabled>📤 Send Email</button>
+
+  <p id="status"></p>
+  <pre id="responseText"></pre>
+
+  <script src="app.js"></script>
+</body>
+</html>
